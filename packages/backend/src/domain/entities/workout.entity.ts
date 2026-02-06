@@ -22,6 +22,12 @@ export interface ExerciseData {
   restTimeSeconds: number;
 }
 
+export interface DailyWorkout {
+  dayNumber: number;
+  weekday: string;
+  exercises: ExerciseData[];
+}
+
 @Entity('workout_plans')
 export class WorkoutPlan {
   @PrimaryGeneratedColumn('uuid')
