@@ -55,6 +55,9 @@ export class WorkoutPlan {
   @Column({ type: 'jsonb', nullable: true })
   exercises: ExerciseData[];
 
+  @Column({ type: 'jsonb', nullable: true })
+  dailyWorkouts?: { dayNumber: number; weekday: string; exercises: ExerciseData[] }[];
+
   @CreateDateColumn()
   createdAt: Date;
 
