@@ -1,14 +1,19 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsDateString, IsNumber, IsOptional, IsString, Min } from 'class-validator';
+import { IsArray, IsDateString, IsNotEmpty, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 
 export class RecordProgressDto {
   @ApiProperty()
+  @IsNotEmpty()
+  @IsString()
   workoutPlanId: string;
 
   @ApiProperty()
+  @IsNotEmpty()
+  @IsString()
   exerciseName: string;
 
   @ApiProperty()
+  @IsNotEmpty()
   @IsDateString()
   date: string;
 
@@ -40,4 +45,10 @@ export class RecordProgressDto {
   @IsNumber()
   @Min(0)
   caloriesBurned?: number;
+
+  @ApiPropertyOptional({ description: 'Sentimento por serie: easy, ok, hard, very_hard', type: [String] })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  setFeelings?: string[];
 }
