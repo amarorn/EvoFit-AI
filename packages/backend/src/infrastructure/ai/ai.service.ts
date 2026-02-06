@@ -12,6 +12,7 @@ export interface UserProfileForAI {
   trainingDaysPerWeek?: number;
   sessionMinutes?: number;
   trainingLocation?: string;
+  recentFeedback?: string;
 }
 
 const DEFAULT_MODEL = 'https://api-inference.huggingface.co/models/Lukamac/PlayPart-AI-Personal-Trainer';
