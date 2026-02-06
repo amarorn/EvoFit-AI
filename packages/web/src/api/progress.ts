@@ -27,6 +27,7 @@ export const progressApi = {
     repsCompleted?: number;
     weightLifted?: number;
     notes?: string;
+    setFeelings?: string[];
   }) => api.post('/progress/record', data),
   list: (days?: number) =>
     api.get<ActivityLog[]>('/progress', { params: days ? { days } : {} }),

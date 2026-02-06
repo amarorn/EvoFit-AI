@@ -8,6 +8,12 @@ export interface Exercise {
   restTimeSeconds: number;
 }
 
+export interface DailyWorkout {
+  dayNumber: number;
+  weekday: string;
+  exercises: Exercise[];
+}
+
 export interface WorkoutPlan {
   id: string;
   title: string;
@@ -15,6 +21,7 @@ export interface WorkoutPlan {
   endDate: string;
   status: string;
   exercises?: Exercise[];
+  dailyWorkouts?: DailyWorkout[];
   createdAt: string;
   updatedAt: string;
 }
