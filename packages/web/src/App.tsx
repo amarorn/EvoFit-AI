@@ -10,6 +10,7 @@ import WorkoutExecution from './pages/WorkoutExecution';
 import Profile from './pages/Profile';
 import Chat from './pages/Chat';
 import Assessment from './pages/Assessment';
+import Nutrition from './pages/Nutrition';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -45,6 +46,7 @@ export default function App() {
         <Route path="profile" element={<Profile />} />
         <Route path="chat" element={<Chat />} />
         <Route path="assessment" element={<Assessment />} />
+        <Route path="nutrition" element={<Nutrition />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
