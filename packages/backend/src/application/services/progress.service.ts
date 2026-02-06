@@ -27,6 +27,7 @@ export class ProgressService {
       weightLifted: dto.weightLifted,
       notes: dto.notes,
       caloriesBurned: dto.caloriesBurned,
+      setFeelings: dto.setFeelings,
     });
     return this.activityRepo.save(log);
   }
