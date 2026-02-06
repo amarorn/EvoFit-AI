@@ -1,0 +1,22 @@
+{
+  "name": "evofit-ai",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": ["packages/*"],
+  "description": "App de Treino Pessoal com IA - AI Trainer Personal App",
+  "scripts": {
+    "dev": "npm run dev:backend & npm run dev:web",
+    "dev:backend": "npm run dev --workspace=backend",
+    "dev:web": "npm run dev --workspace=web",
+    "build": "npm run build --workspaces",
+    "build:backend": "npm run build --workspace=backend",
+    "build:web": "npm run build --workspace=web",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
