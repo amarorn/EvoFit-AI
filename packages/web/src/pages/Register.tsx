@@ -31,7 +31,7 @@ export default function Register() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="font-heading font-bold text-3xl text-accent">EvoFit-AI</h1>
-          <p className="text-secondary mt-1">Seu Treino, Sua Inteligencia</p>
+          <p className="text-muted mt-1">Seu Treino, Sua Inteligencia</p>
         </div>
 
         <div className="bg-secondary rounded-xl p-8 shadow-xl border border-accent/20">

@@ -8,6 +8,9 @@ export default {
         accent: '#00FFFF',
         secondary: '#415A77',
         'bg-light': '#E0E1DD',
+        content: '#FFFFFF',
+        muted: '#8b949e',
+        'on-accent': '#0D1B2A',
       },
       fontFamily: {
         heading: ['Poppins', 'sans-serif'],

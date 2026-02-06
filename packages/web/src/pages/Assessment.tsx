@@ -93,10 +93,10 @@ export default function Assessment() {
 
   return (
     <div className="max-w-2xl space-y-6">
-      <h1 className="font-heading font-bold text-2xl text-primary">
+      <h1 className="font-heading font-bold text-2xl text-content">
         Avaliacao para Treino
       </h1>
-      <p className="text-secondary">
+      <p className="text-muted">
         Preencha os dados abaixo para que a IA monte um treino personalizado para voce.
       </p>
 
@@ -108,7 +108,7 @@ export default function Assessment() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-secondary text-sm font-medium mb-1">Idade (anos)</label>
+              <label className="block text-muted text-sm font-medium mb-1">Idade (anos)</label>
               <input
                 type="number"
                 name="age"
@@ -116,17 +116,17 @@ export default function Assessment() {
                 onChange={handleChange}
                 min={14}
                 max={120}
-                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-accent focus:ring-1 focus:ring-accent outline-none text-primary"
+                className="w-full px-4 py-3 rounded-lg border border-secondary focus:border-accent focus:ring-1 focus:ring-accent outline-none text-content bg-primary/50"
                 placeholder="25"
               />
             </div>
             <div>
-              <label className="block text-secondary text-sm font-medium mb-1">Genero</label>
+              <label className="block text-muted text-sm font-medium mb-1">Genero</label>
               <select
                 name="gender"
                 value={form.gender ?? ''}
                 onChange={handleChange}
-                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-accent focus:ring-1 focus:ring-accent outline-none text-primary"
+                className="w-full px-4 py-3 rounded-lg border border-secondary focus:border-accent focus:ring-1 focus:ring-accent outline-none text-content bg-primary/50"
               >
                 <option value="">Selecione</option>
                 <option value="male">Masculino</option>
@@ -138,7 +138,7 @@ export default function Assessment() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-secondary text-sm font-medium mb-1">Peso (kg)</label>
+              <label className="block text-muted text-sm font-medium mb-1">Peso (kg)</label>
               <input
                 type="number"
                 name="weight"
@@ -147,12 +147,12 @@ export default function Assessment() {
                 min={30}
                 max={300}
                 step={0.1}
-                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-accent focus:ring-1 focus:ring-accent outline-none text-primary"
+                className="w-full px-4 py-3 rounded-lg border border-secondary focus:border-accent focus:ring-1 focus:ring-accent outline-none text-content bg-primary/50"
                 placeholder="70"
               />
             </div>
             <div>
-              <label className="block text-secondary text-sm font-medium mb-1">Altura (cm)</label>
+              <label className="block text-muted text-sm font-medium mb-1">Altura (cm)</label>
               <input
                 type="number"
                 name="height"
@@ -160,19 +160,19 @@ export default function Assessment() {
                 onChange={handleChange}
                 min={100}
                 max={250}
-                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-accent focus:ring-1 focus:ring-accent outline-none text-primary"
+                className="w-full px-4 py-3 rounded-lg border border-secondary focus:border-accent focus:ring-1 focus:ring-accent outline-none text-content bg-primary/50"
                 placeholder="175"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-secondary text-sm font-medium mb-2">Nivel de fitness</label>
+            <label className="block text-muted text-sm font-medium mb-2">Nivel de fitness</label>
             <select
               name="fitnessLevel"
               value={form.fitnessLevel ?? 'beginner'}
               onChange={handleChange}
-              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-accent focus:ring-1 focus:ring-accent outline-none text-primary"
+              className="w-full px-4 py-3 rounded-lg border border-secondary focus:border-accent focus:ring-1 focus:ring-accent outline-none text-content bg-primary/50"
             >
               {FITNESS_LEVELS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -183,7 +183,7 @@ export default function Assessment() {
           </div>
 
           <div>
-            <label className="block text-secondary text-sm font-medium mb-2">Objetivos</label>
+            <label className="block text-muted text-sm font-medium mb-2">Objetivos</label>
             <div className="space-y-2">
               {GOALS_OPTIONS.map((opt) => (
                 <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
@@ -193,14 +193,14 @@ export default function Assessment() {
                     onChange={(e) => handleGoalsChange(opt.value, e.target.checked)}
                     className="rounded border-secondary text-accent focus:ring-accent"
                   />
-                  <span className="text-primary">{opt.label}</span>
+                  <span className="text-content">{opt.label}</span>
                 </label>
               ))}
             </div>
           </div>
 
           <div>
-            <label className="block text-secondary text-sm font-medium mb-1">
+            <label className="block text-muted text-sm font-medium mb-1">
               Lesoes ou limitacoes fisicas
             </label>
             <textarea
@@ -208,14 +208,14 @@ export default function Assessment() {
               value={form.injuriesOrLimitations ?? ''}
               onChange={handleChange}
               rows={3}
-              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-accent focus:ring-1 focus:ring-accent outline-none text-primary resize-none"
+              className="w-full px-4 py-3 rounded-lg border border-secondary focus:border-accent focus:ring-1 focus:ring-accent outline-none text-content bg-primary/50 resize-none"
               placeholder="Ex: problema no joelho direito, lombar fragil..."
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-secondary text-sm font-medium mb-1">
+              <label className="block text-muted text-sm font-medium mb-1">
                 Dias por semana para treinar
               </label>
               <input
@@ -225,11 +225,11 @@ export default function Assessment() {
                 onChange={handleChange}
                 min={1}
                 max={7}
-                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-accent focus:ring-1 focus:ring-accent outline-none text-primary"
+                className="w-full px-4 py-3 rounded-lg border border-secondary focus:border-accent focus:ring-1 focus:ring-accent outline-none text-content bg-primary/50"
               />
             </div>
             <div>
-              <label className="block text-secondary text-sm font-medium mb-1">
+              <label className="block text-muted text-sm font-medium mb-1">
                 Tempo por sessao (minutos)
               </label>
               <input
@@ -239,20 +239,20 @@ export default function Assessment() {
                 onChange={handleChange}
                 min={15}
                 max={120}
-                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-accent focus:ring-1 focus:ring-accent outline-none text-primary"
+                className="w-full px-4 py-3 rounded-lg border border-secondary focus:border-accent focus:ring-1 focus:ring-accent outline-none text-content bg-primary/50"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-secondary text-sm font-medium mb-2">
+            <label className="block text-muted text-sm font-medium mb-2">
               Onde vai treinar
             </label>
             <select
               name="trainingLocation"
               value={form.trainingLocation ?? 'both'}
               onChange={handleChange}
-              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-accent focus:ring-1 focus:ring-accent outline-none text-primary"
+              className="w-full px-4 py-3 rounded-lg border border-secondary focus:border-accent focus:ring-1 focus:ring-accent outline-none text-content bg-primary/50"
             >
               {LOCATION_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>

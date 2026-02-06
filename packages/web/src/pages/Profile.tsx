@@ -108,20 +108,20 @@ export default function Profile() {
 
   return (
     <div className="max-w-2xl space-y-6">
-      <h1 className="font-heading font-bold text-2xl text-primary">
+      <h1 className="font-heading font-bold text-2xl text-content">
         Meu perfil
       </h1>
 
       <Card>
         <form onSubmit={handleSubmit} className="space-y-6">
           {success && (
-            <div className="p-4 rounded-lg bg-green-500/20 text-green-700 text-sm">
+            <div className="p-4 rounded-lg bg-green-500/20 text-green-400 text-sm">
               Perfil atualizado com sucesso.
             </div>
           )}
 
           <div>
-            <label className="block text-secondary text-sm font-medium mb-1">
+            <label className="block text-muted text-sm font-medium mb-1">
               Nome
             </label>
             <input
@@ -129,29 +129,29 @@ export default function Profile() {
               name="name"
               value={form.name}
               onChange={handleChange}
-              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-accent focus:ring-1 focus:ring-accent outline-none text-primary"
+              className="w-full px-4 py-3 rounded-lg border border-secondary focus:border-accent focus:ring-1 focus:ring-accent outline-none text-content bg-primary/50"
               placeholder="Seu nome"
             />
           </div>
 
           <div>
-            <label className="block text-secondary text-sm font-medium mb-1">
+            <label className="block text-muted text-sm font-medium mb-1">
               Email
             </label>
             <input
               type="email"
               value={profile?.email ?? authUser?.email ?? ''}
               disabled
-              className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50 text-secondary"
+              className="w-full px-4 py-3 rounded-lg border border-secondary bg-secondary/50 text-muted"
             />
-            <p className="text-secondary text-xs mt-1">
+            <p className="text-muted text-xs mt-1">
               O email nao pode ser alterado.
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-secondary text-sm font-medium mb-1">
+              <label className="block text-muted text-sm font-medium mb-1">
                 Idade (anos)
               </label>
               <input
@@ -161,19 +161,19 @@ export default function Profile() {
                 onChange={handleChange}
                 min={14}
                 max={120}
-                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-accent focus:ring-1 focus:ring-accent outline-none text-primary"
+                className="w-full px-4 py-3 rounded-lg border border-secondary focus:border-accent focus:ring-1 focus:ring-accent outline-none text-content bg-primary/50"
                 placeholder="25"
               />
             </div>
             <div>
-              <label className="block text-secondary text-sm font-medium mb-1">
+              <label className="block text-muted text-sm font-medium mb-1">
                 Genero
               </label>
               <select
                 name="gender"
                 value={form.gender}
                 onChange={handleChange}
-                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-accent focus:ring-1 focus:ring-accent outline-none text-primary"
+                className="w-full px-4 py-3 rounded-lg border border-secondary focus:border-accent focus:ring-1 focus:ring-accent outline-none text-content bg-primary/50"
               >
                 <option value="">Selecione</option>
                 <option value="male">Masculino</option>
@@ -185,7 +185,7 @@ export default function Profile() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-secondary text-sm font-medium mb-1">
+              <label className="block text-muted text-sm font-medium mb-1">
                 Peso (kg)
               </label>
               <input
@@ -196,12 +196,12 @@ export default function Profile() {
                 min={30}
                 max={300}
                 step={0.1}
-                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-accent focus:ring-1 focus:ring-accent outline-none text-primary"
+                className="w-full px-4 py-3 rounded-lg border border-secondary focus:border-accent focus:ring-1 focus:ring-accent outline-none text-content bg-primary/50"
                 placeholder="70"
               />
             </div>
             <div>
-              <label className="block text-secondary text-sm font-medium mb-1">
+              <label className="block text-muted text-sm font-medium mb-1">
                 Altura (cm)
               </label>
               <input
@@ -211,21 +211,21 @@ export default function Profile() {
                 onChange={handleChange}
                 min={100}
                 max={250}
-                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-accent focus:ring-1 focus:ring-accent outline-none text-primary"
+                className="w-full px-4 py-3 rounded-lg border border-secondary focus:border-accent focus:ring-1 focus:ring-accent outline-none text-content bg-primary/50"
                 placeholder="175"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-secondary text-sm font-medium mb-2">
+            <label className="block text-muted text-sm font-medium mb-2">
               Nivel de fitness
             </label>
             <select
               name="fitnessLevel"
               value={form.fitnessLevel}
               onChange={handleChange}
-              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-accent focus:ring-1 focus:ring-accent outline-none text-primary"
+              className="w-full px-4 py-3 rounded-lg border border-secondary focus:border-accent focus:ring-1 focus:ring-accent outline-none text-content bg-primary/50"
             >
               {FITNESS_LEVELS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -236,7 +236,7 @@ export default function Profile() {
           </div>
 
           <div>
-            <label className="block text-secondary text-sm font-medium mb-2">
+            <label className="block text-muted text-sm font-medium mb-2">
               Objetivos
             </label>
             <div className="space-y-2">
@@ -253,7 +253,7 @@ export default function Profile() {
                     }
                     className="rounded border-secondary text-accent focus:ring-accent"
                   />
-                  <span className="text-primary">{opt.label}</span>
+                  <span className="text-content">{opt.label}</span>
                 </label>
               ))}
             </div>
