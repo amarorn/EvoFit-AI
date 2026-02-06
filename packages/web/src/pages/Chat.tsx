@@ -67,7 +67,7 @@ export default function Chat() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-8rem)] max-w-3xl mx-auto">
-      <h1 className="font-heading font-bold text-2xl text-primary mb-4">
+      <h1 className="font-heading font-bold text-2xl text-content mb-4">
         Chat com Personal Trainer
       </h1>
 
@@ -84,8 +84,8 @@ export default function Chat() {
               <div
                 className={`max-w-[85%] rounded-2xl px-4 py-3 ${
                   msg.role === 'user'
-                    ? 'bg-accent text-primary'
-                    : 'bg-secondary/20 text-primary border border-secondary/30'
+                    ? 'bg-accent text-on-accent'
+                    : 'bg-secondary/20 text-content border border-secondary/30'
                 }`}
               >
                 <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
@@ -115,7 +115,7 @@ export default function Chat() {
             onChange={(e) => setInput(e.target.value)}
             placeholder="Digite sua pergunta..."
             disabled={loading}
-            className="flex-1 px-4 py-3 rounded-xl border border-gray-200 focus:border-accent focus:ring-1 focus:ring-accent outline-none text-primary disabled:opacity-50"
+            className="flex-1 px-4 py-3 rounded-xl border border-secondary focus:border-accent focus:ring-1 focus:ring-accent outline-none text-content bg-primary/50 disabled:opacity-50"
           />
           <Button type="submit" loading={loading} disabled={!input.trim()}>
             Enviar
