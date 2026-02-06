@@ -44,6 +44,9 @@ export class ActivityLog {
   @Column({ type: 'int', nullable: true })
   caloriesBurned?: number;
 
+  @Column({ type: 'simple-array', nullable: true })
+  setFeelings?: string[];
+
   @CreateDateColumn()
   createdAt: Date;
 }
