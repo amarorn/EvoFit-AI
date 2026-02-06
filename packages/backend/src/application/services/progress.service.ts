@@ -41,9 +41,22 @@ export class ProgressService {
     });
   }
 
+  async getRecentFeedback(userId: string, days = 14): Promise<ActivityLog[]> {
+    const since = new Date();
+    since.setDate(since.getDate() - days);
+    const logs = await this.activityRepo.find({
+      where: { userId },
+      order: { date: 'DESC' },
+      take: 80,
+    });
+    return logs.filter((l) => new Date(l.date) >= since && l.setFeelings?.length);
+  }
+
   async getStats(userId: string, days = 7) {
     const logs = await this.getByUser(userId, days);
-    const workoutsCompleted = new Set(logs.map((l) => `${l.date.toISOString().slice(0, 10)}-${l.exerciseName}`)).size;
+    const workoutsCompleted = new Set(
+      logs.map((l) => `${(typeof l.date === 'string' ? new Date(l.date) : l.date).toISOString().slice(0, 10)}-${l.exerciseName}`),
+    ).size;
     const totalCalories = logs.reduce((s, l) => s + (l.caloriesBurned ?? 0), 0);
     const exercisesCompleted = logs.reduce((s, l) => s + l.repsCompleted, 0);
 
