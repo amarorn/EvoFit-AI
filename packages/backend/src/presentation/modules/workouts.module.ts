@@ -4,12 +4,14 @@ import { WorkoutsController } from '../controllers/workouts.controller';
 import { WorkoutsService } from '../../application/services/workouts.service';
 import { WorkoutPlan } from '../../domain/entities/workout.entity';
 import { UsersModule } from './users.module';
+import { ProgressModule } from './progress.module';
 import { AIService } from '../../infrastructure/ai/ai.service';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([WorkoutPlan]),
     UsersModule,
+    ProgressModule,
   ],
   controllers: [WorkoutsController],
   providers: [WorkoutsService, AIService],
