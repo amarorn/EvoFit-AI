@@ -16,7 +16,7 @@ export function Button({
 }: ButtonProps) {
   const base = 'px-6 py-3 rounded-xl font-heading font-semibold transition-all duration-200';
   const variants = {
-    primary: 'bg-accent text-primary hover:bg-accent/90 disabled:opacity-50',
+    primary: 'bg-accent text-on-accent hover:bg-accent/90 disabled:opacity-50',
     secondary: 'border-2 border-accent text-accent hover:bg-accent/10',
     tertiary: 'text-accent hover:underline',
   };
@@ -28,7 +28,7 @@ export function Button({
       {...props}
     >
       {loading ? (
-        <span className="inline-block h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        <span className="inline-block h-5 w-5 border-2 border-accent border-t-transparent rounded-full animate-spin" />
       ) : (
         children
       )}

@@ -36,7 +36,7 @@ export function Timer({ seconds, onComplete, running }: TimerProps) {
   return (
     <div className="text-center">
       <div className="font-heading font-bold text-5xl text-accent tabular-nums">{display}</div>
-      <p className="text-secondary text-sm mt-1">Descanso</p>
+      <p className="text-muted text-sm mt-1">Descanso</p>
     </div>
   );
 }

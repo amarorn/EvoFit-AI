@@ -6,9 +6,18 @@
   --primary: #0D1B2A;
   --accent: #00FFFF;
   --secondary: #415A77;
-  --bg-light: #E0E1DD;
+  --bg-card: #415A77;
 }
 
 body {
-  @apply font-body text-white bg-primary antialiased;
+  @apply font-body text-white antialiased;
+  background-color: var(--primary);
 }
+
+.app-bg {
+  background-image:
+    linear-gradient(rgba(0, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
