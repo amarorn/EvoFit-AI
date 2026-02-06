@@ -62,36 +62,263 @@ export class AIService {
     return text?.trim() ?? null;
   }
 
-  async generateWorkout(profile: UserProfileForAI): Promise<ExerciseData[]> {
+  async generateWorkoutByDays(profile: UserProfileForAI): Promise<{ dayNumber: number; muscleGroup: string; exercises: ExerciseData[] }[]> {
     const apiKey = this.config.get<string>('HUGGINGFACE_API_KEY');
     const apiUrl = this.config.get<string>('HUGGINGFACE_API_URL', DEFAULT_MODEL);
     const fallbackUrl = this.config.get<string>('HUGGINGFACE_FALLBACK_MODEL', FALLBACK_MODEL);
+    const numDays = Math.max(1, Math.min(7, profile.trainingDaysPerWeek ?? 3));
 
     const isLocal = apiUrl.includes('localhost') || apiUrl.includes('127.0.0.1');
-    if (!apiKey && !isLocal) return this.getFallbackWorkout(profile);
+    if (!apiKey && !isLocal) return this.getFallbackWorkoutByDays(profile);
 
     try {
-      const prompt = this.buildPrompt(profile);
-      let text = await this.callInferenceApi(apiKey ?? '', apiUrl, prompt, 800);
+      const prompt = this.buildPromptByMuscleGroup(profile, numDays);
+      let text = await this.callInferenceApi(apiKey ?? '', apiUrl, prompt, 1000);
 
       if (!text) {
-        text = await this.callInferenceApi(apiKey ?? '', fallbackUrl, prompt, 800);
+        text = await this.callInferenceApi(apiKey ?? '', fallbackUrl, prompt, 1000);
       }
 
       if (text) {
-        const parsed = this.parseAIResponse(text);
-        if (parsed.length >= 5) {
-          console.log('[AI] Treino gerado pelo modelo:', parsed.map((e) => e.name).join(', '));
+        let parsed = this.parseWorkoutByDays(text, numDays);
+        if (parsed.length >= 1 && parsed.some((d) => d.exercises.length >= 2)) {
+          parsed = this.applyFeedbackToDaily(parsed, profile.recentFeedback);
+          console.log('[AI] Treino por grupo muscular gerado:', parsed.map((d) => `${d.muscleGroup}: ${d.exercises.length} ex`).join(', '));
           return parsed;
         }
       }
 
-      console.log('[AI] Usando treino fallback (modelo nao retornou 5+ exercicios validos)');
-      return this.getFallbackWorkout(profile);
+      console.log('[AI] Usando treino fallback por grupo muscular');
+      return this.getFallbackWorkoutByDays(profile);
     } catch (error) {
       console.error('AI service error:', error);
-      return this.getFallbackWorkout(profile);
+      return this.getFallbackWorkoutByDays(profile);
     }
+  }
+
+  private buildPromptByMuscleGroup(profile: UserProfileForAI, numDays: number): string {
+    const level = profile.fitnessLevel || 'beginner';
+    const goals = profile.goals?.join(', ') || 'general fitness';
+    const groups = this.getMuscleGroupsForDays(numDays);
+    let prompt = `Generate a weekly training split. ONE muscle group per day. User trains ${numDays} days per week. Level: ${level}. Goals: ${goals}. `;
+    if (profile.recentFeedback) {
+      prompt += `Recent session feedback (use to adjust intensity): ${profile.recentFeedback}. `;
+    }
+    prompt += `Days: ${groups.join(', ')}. `;
+    if (profile.age) prompt += `Age: ${profile.age}. `;
+    if (profile.weight) prompt += `Weight: ${profile.weight}kg. `;
+    if (profile.height) prompt += `Height: ${profile.height}cm. `;
+    if (profile.injuriesOrLimitations) {
+      prompt += `IMPORTANT - Avoid: ${profile.injuriesOrLimitations}. `;
+    }
+    if (profile.sessionMinutes) prompt += `Session: ${profile.sessionMinutes} min. `;
+    if (profile.trainingLocation) prompt += `Location: ${profile.trainingLocation}. `;
+    prompt += `Use EXACTLY this format - one muscle group per DAY block:
+DAY 1 - ${groups[0]}:
+EXERCISE: Name | SETS: 3 | REPS: 10 | REST: 60
+DAY 2 - ${groups[1]}:
+EXERCISE: Name | SETS: 3 | REPS: 10 | REST: 60`;
+    if (numDays >= 3) prompt += `
+DAY 3 - ${groups[2]}:
+EXERCISE: Name | SETS: 3 | REPS: 10 | REST: 60`;
+    if (numDays >= 4) prompt += `
+DAY 4 - ${groups[3]}:
+EXERCISE: Name | SETS: 3 | REPS: 10 | REST: 60`;
+    if (numDays >= 5) prompt += `
+DAY 5 - ${groups[4]}:
+EXERCISE: Name | SETS: 3 | REPS: 10 | REST: 60`;
+    return prompt;
+  }
+
+  private getMuscleGroupsForDays(n: number): string[] {
+    const groups: Record<number, string[]> = {
+      1: ['Full Body'],
+      2: ['Upper Body', 'Lower Body'],
+      3: ['Legs', 'Push (Chest/Shoulders/Triceps)', 'Pull (Back/Biceps)'],
+      4: ['Legs', 'Chest', 'Back', 'Shoulders'],
+      5: ['Legs', 'Chest', 'Back', 'Shoulders', 'Arms'],
+      6: ['Legs', 'Chest', 'Back', 'Shoulders', 'Biceps', 'Triceps'],
+      7: ['Legs', 'Chest', 'Back', 'Shoulders', 'Biceps', 'Triceps', 'Core'],
+    };
+    return groups[n] ?? groups[3];
+  }
+
+  private parseWorkoutByDays(text: string, numDays: number): { dayNumber: number; muscleGroup: string; exercises: ExerciseData[] }[] {
+    const result: { dayNumber: number; muscleGroup: string; exercises: ExerciseData[] }[] = [];
+    const dayBlocks = text.split(/(?=DAY\s+\d+)/i).filter(Boolean);
+
+    for (const block of dayBlocks) {
+      const dayMatch = block.match(/DAY\s+(\d+)\s*[-:]\s*([^\n]+)/i);
+      if (!dayMatch) continue;
+      const dayNum = parseInt(dayMatch[1], 10);
+      const muscleGroup = dayMatch[2].trim();
+      const exercises = this.parseAIResponse(block);
+      if (exercises.length >= 1) {
+        result.push({ dayNumber: dayNum, muscleGroup, exercises });
+      }
+    }
+
+    result.sort((a, b) => a.dayNumber - b.dayNumber);
+    const groups = this.getMuscleGroupsForDays(numDays);
+    return result.slice(0, numDays).map((d, i) => ({
+      ...d,
+      dayNumber: i + 1,
+      muscleGroup: groups[i] ?? d.muscleGroup,
+    }));
+  }
+
+  private applyFeedbackToDaily(
+    daily: { dayNumber: number; muscleGroup: string; exercises: ExerciseData[] }[],
+    recentFeedback?: string,
+  ): { dayNumber: number; muscleGroup: string; exercises: ExerciseData[] }[] {
+    const { hard: feltHard, easy: feltEasy } = this.parseFeedback(recentFeedback);
+    if (feltHard.length === 0 && feltEasy.length === 0) return daily;
+    return daily.map((d) => ({
+      ...d,
+      exercises: d.exercises.map((ex) => {
+        if (this.matchesFeedback(ex.name, feltHard)) return this.applyFeedbackAdjustment(ex, true);
+        if (this.matchesFeedback(ex.name, feltEasy)) return this.applyFeedbackAdjustment(ex, false);
+        return ex;
+      }),
+    }));
+  }
+
+  private parseFeedback(recentFeedback?: string): { hard: string[]; easy: string[] } {
+    const hard: string[] = [];
+    const easy: string[] = [];
+    if (!recentFeedback?.trim()) return { hard, easy };
+    const parts = recentFeedback.split(';').map((p) => p.trim());
+    for (const part of parts) {
+      const m = part.match(/^(.+?):\s*felt\s+(hard|easy)$/i);
+      if (m) {
+        const name = m[1].trim();
+        if (m[2].toLowerCase() === 'hard') hard.push(name);
+        else easy.push(name);
+      }
+    }
+    return { hard, easy };
+  }
+
+  private matchesFeedback(exerciseName: string, feedbackNames: string[]): boolean {
+    const lower = exerciseName.toLowerCase();
+    return feedbackNames.some((f) => lower.includes(f.toLowerCase()) || f.toLowerCase().includes(lower));
+  }
+
+  private applyFeedbackAdjustment(ex: ExerciseData, feltHard: boolean): ExerciseData {
+    const sets = Math.max(2, Math.min(5, ex.sets + (feltHard ? -1 : 1)));
+    const reps = ex.reps === 1 ? 1 : Math.max(6, Math.min(20, ex.reps + (feltHard ? -2 : 2)));
+    const restDelta = feltHard ? 15 : -10;
+    const restTimeSeconds = Math.max(30, Math.min(120, ex.restTimeSeconds + restDelta));
+    return { ...ex, sets, reps, restTimeSeconds };
+  }
+
+  private getFallbackWorkoutByDays(profile: UserProfileForAI): { dayNumber: number; muscleGroup: string; exercises: ExerciseData[] }[] {
+    const numDays = Math.max(1, Math.min(7, profile.trainingDaysPerWeek ?? 3));
+    const groups = this.getMuscleGroupsForDays(numDays);
+    const level = profile.fitnessLevel || 'beginner';
+    const isBeginner = level === 'beginner';
+    const sets = isBeginner ? 3 : 4;
+    const reps = isBeginner ? 10 : 12;
+    const { hard: feltHard, easy: feltEasy } = this.parseFeedback(profile.recentFeedback);
+
+    const byGroup: Record<string, ExerciseData[]> = {
+      'Full Body': [
+        { name: 'Squats', sets, reps, restTimeSeconds: 60 },
+        { name: 'Push-ups', sets, reps: isBeginner ? 8 : 12, restTimeSeconds: 45 },
+        { name: 'Lunges', sets: 3, reps: isBeginner ? 8 : 10, restTimeSeconds: 60 },
+        { name: 'Plank', sets: 3, reps: 1, restTimeSeconds: 30, description: '30s' },
+      ],
+      'Upper Body': [
+        { name: 'Push-ups', sets, reps: isBeginner ? 8 : 12, restTimeSeconds: 45 },
+        { name: 'Dumbbell Rows', sets, reps, restTimeSeconds: 60 },
+        { name: 'Shoulder Press', sets: 3, reps, restTimeSeconds: 45 },
+        { name: 'Tricep Dips', sets: 3, reps, restTimeSeconds: 45 },
+        { name: 'Bicep Curls', sets: 3, reps: 12, restTimeSeconds: 45 },
+      ],
+      'Lower Body': [
+        { name: 'Squats', sets, reps, restTimeSeconds: 60 },
+        { name: 'Lunges', sets: 3, reps: isBeginner ? 8 : 10, restTimeSeconds: 60 },
+        { name: 'Glute Bridges', sets: 3, reps: 12, restTimeSeconds: 45 },
+        { name: 'Calf Raises', sets: 3, reps: 15, restTimeSeconds: 30 },
+      ],
+      'Legs': [
+        { name: 'Squats', sets, reps, restTimeSeconds: 60 },
+        { name: 'Lunges', sets: 3, reps: isBeginner ? 8 : 10, restTimeSeconds: 60 },
+        { name: 'Deadlifts', sets: 3, reps: isBeginner ? 8 : 10, restTimeSeconds: 90 },
+        { name: 'Glute Bridges', sets: 3, reps: 12, restTimeSeconds: 45 },
+      ],
+      'Push (Chest/Shoulders/Triceps)': [
+        { name: 'Push-ups', sets, reps: isBeginner ? 8 : 12, restTimeSeconds: 45 },
+        { name: 'Shoulder Press', sets: 3, reps, restTimeSeconds: 45 },
+        { name: 'Tricep Dips', sets: 3, reps, restTimeSeconds: 45 },
+        { name: 'Pike Push-ups', sets: 3, reps: 8, restTimeSeconds: 45 },
+      ],
+      'Pull (Back/Biceps)': [
+        { name: 'Dumbbell Rows', sets, reps, restTimeSeconds: 60 },
+        { name: 'Bicep Curls', sets: 3, reps: 12, restTimeSeconds: 45 },
+        { name: 'Pull-ups or Lat Pulldown', sets: 3, reps: 8, restTimeSeconds: 60 },
+        { name: 'Hammer Curls', sets: 3, reps: 12, restTimeSeconds: 45 },
+      ],
+      'Chest': [
+        { name: 'Push-ups', sets, reps: isBeginner ? 8 : 12, restTimeSeconds: 45 },
+        { name: 'Incline Push-ups', sets, reps: isBeginner ? 8 : 12, restTimeSeconds: 45 },
+        { name: 'Diamond Push-ups', sets: 3, reps: 8, restTimeSeconds: 45 },
+        { name: 'Pec Fly', sets: 3, reps, restTimeSeconds: 60 },
+      ],
+      'Back': [
+        { name: 'Dumbbell Rows', sets, reps, restTimeSeconds: 60 },
+        { name: 'Superman Hold', sets: 3, reps: 1, restTimeSeconds: 30, description: '30s' },
+        { name: 'Reverse Snow Angels', sets: 3, reps: 12, restTimeSeconds: 45 },
+        { name: 'Dead Bug', sets: 3, reps: 12, restTimeSeconds: 45 },
+      ],
+      'Shoulders': [
+        { name: 'Shoulder Press', sets: 3, reps, restTimeSeconds: 45 },
+        { name: 'Lateral Raises', sets: 3, reps: 12, restTimeSeconds: 45 },
+        { name: 'Pike Push-ups', sets: 3, reps: 8, restTimeSeconds: 45 },
+        { name: 'Front Raises', sets: 3, reps: 12, restTimeSeconds: 45 },
+      ],
+      'Arms': [
+        { name: 'Bicep Curls', sets: 3, reps: 12, restTimeSeconds: 45 },
+        { name: 'Tricep Dips', sets: 3, reps, restTimeSeconds: 45 },
+        { name: 'Hammer Curls', sets: 3, reps: 12, restTimeSeconds: 45 },
+        { name: 'Tricep Pushdown', sets: 3, reps: 12, restTimeSeconds: 45 },
+      ],
+      'Biceps': [
+        { name: 'Bicep Curls', sets: 3, reps: 12, restTimeSeconds: 45 },
+        { name: 'Hammer Curls', sets: 3, reps: 12, restTimeSeconds: 45 },
+        { name: 'Concentration Curls', sets: 3, reps: 12, restTimeSeconds: 45 },
+      ],
+      'Triceps': [
+        { name: 'Tricep Dips', sets: 3, reps, restTimeSeconds: 45 },
+        { name: 'Tricep Pushdown', sets: 3, reps: 12, restTimeSeconds: 45 },
+        { name: 'Close Grip Push-ups', sets: 3, reps: 10, restTimeSeconds: 45 },
+      ],
+      'Core': [
+        { name: 'Plank', sets: 3, reps: 1, restTimeSeconds: 30, description: '30s' },
+        { name: 'Crunches', sets: 3, reps: 15, restTimeSeconds: 30 },
+        { name: 'Russian Twists', sets: 3, reps: 20, restTimeSeconds: 30 },
+        { name: 'Leg Raises', sets: 3, reps: 12, restTimeSeconds: 45 },
+      ],
+    };
+
+    return groups.map((g, i) => {
+      const baseExercises = byGroup[g] ?? byGroup['Full Body'];
+      const exercises = baseExercises.map((ex) => {
+        if (this.matchesFeedback(ex.name, feltHard)) {
+          return this.applyFeedbackAdjustment(ex, true);
+        }
+        if (this.matchesFeedback(ex.name, feltEasy)) {
+          return this.applyFeedbackAdjustment(ex, false);
+        }
+        return ex;
+      });
+      return { dayNumber: i + 1, muscleGroup: g, exercises };
+    });
+  }
+
+  async generateWorkout(profile: UserProfileForAI): Promise<ExerciseData[]> {
+    const daily = await this.generateWorkoutByDays(profile);
+    return daily.flatMap((d) => d.exercises);
   }
 
   private buildPrompt(profile: UserProfileForAI): string {

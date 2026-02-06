@@ -58,11 +58,17 @@ def generate(request: InferenceRequest):
     load_model()
 
     params = request.parameters or {}
-    max_new_tokens = params.get("max_new_tokens", 300)
+    max_new_tokens = min(int(params.get("max_new_tokens", 300)), 500)
     temperature = params.get("temperature", 0.7)
     do_sample = params.get("do_sample", True)
 
-    input_ids = tokenizer.encode(request.inputs, return_tensors="pt")
+    max_input = 1024 - max_new_tokens
+    input_ids = tokenizer.encode(
+        request.inputs,
+        return_tensors="pt",
+        truncation=True,
+        max_length=max_input,
+    )
     input_len = input_ids.shape[1]
 
     with torch.no_grad():
