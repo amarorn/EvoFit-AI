@@ -1,11 +1,51 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { WorkoutPlan } from '../../domain/entities/workout.entity';
+import { WorkoutPlan, ExerciseData } from '../../domain/entities/workout.entity';
 import { AIService } from '../../infrastructure/ai/ai.service';
 import { UsersService } from './users.service';
+import { ProgressService } from './progress.service';
 import { GenerateWorkoutWithAssessmentDto } from '../../presentation/dto/assessment.dto';
 import { UserProfileForAI } from '../../infrastructure/ai/ai.service';
+
+const MUSCLE_GROUP_LABELS: Record<string, string> = {
+  'Full Body': 'Corpo inteiro',
+  'Upper Body': 'Tronco',
+  'Lower Body': 'Pernas',
+  'Legs': 'Pernas',
+  'Push (Chest/Shoulders/Triceps)': 'Empurrar (Peito/Ombros/Triceps)',
+  'Pull (Back/Biceps)': 'Puxar (Costas/Biceps)',
+  'Chest': 'Peito',
+  'Back': 'Costas',
+  'Shoulders': 'Ombros',
+  'Arms': 'Bracos',
+  'Biceps': 'Biceps',
+  'Triceps': 'Triceps',
+  'Core': 'Core',
+};
+
+function toDayLabel(dayNumber: number, muscleGroup: string): string {
+  const label = MUSCLE_GROUP_LABELS[muscleGroup] ?? muscleGroup;
+  return `Dia ${dayNumber} - ${label}`;
+}
+
+function buildFeedbackSummary(logs: { exerciseName: string; setFeelings?: string[] }[]): string {
+  if (logs.length === 0) return '';
+  const byExercise: Record<string, string[]> = {};
+  for (const log of logs) {
+    if (!log.setFeelings?.length) continue;
+    if (!byExercise[log.exerciseName]) byExercise[log.exerciseName] = [];
+    byExercise[log.exerciseName].push(...log.setFeelings);
+  }
+  const parts: string[] = [];
+  for (const [ex, feelings] of Object.entries(byExercise)) {
+    const hard = feelings.filter((f) => f === 'hard' || f === 'very_hard').length;
+    const easy = feelings.filter((f) => f === 'easy').length;
+    if (hard > easy) parts.push(`${ex}: felt hard`);
+    else if (easy > hard) parts.push(`${ex}: felt easy`);
+  }
+  return parts.join('; ') || '';
+}
 
 @Injectable()
 export class WorkoutsService {
@@ -13,12 +53,16 @@ export class WorkoutsService {
     @InjectRepository(WorkoutPlan)
     private readonly workoutRepo: Repository<WorkoutPlan>,
     private usersService: UsersService,
+    private progressService: ProgressService,
     private aiService: AIService,
   ) {}
 
   async generate(userId: string): Promise<WorkoutPlan> {
     const user = await this.usersService.findById(userId);
     if (!user) throw new NotFoundException('Usuario nao encontrado');
+
+    const feedbackLogs = await this.progressService.getRecentFeedback(userId, 14);
+    const recentFeedback = buildFeedbackSummary(feedbackLogs);
 
     const profile: UserProfileForAI = {
       age: user.age,
@@ -30,9 +74,16 @@ export class WorkoutsService {
       trainingDaysPerWeek: user.trainingDaysPerWeek,
       sessionMinutes: user.sessionMinutes,
       trainingLocation: user.trainingLocation,
+      recentFeedback: recentFeedback || undefined,
     };
 
-    const exercises = await this.aiService.generateWorkout(profile);
+    const daily = await this.aiService.generateWorkoutByDays(profile);
+    const dailyWorkouts = daily.map((d) => ({
+      dayNumber: d.dayNumber,
+      weekday: toDayLabel(d.dayNumber, d.muscleGroup),
+      exercises: d.exercises,
+    }));
+    const exercises = daily.flatMap((d) => d.exercises);
 
     const startDate = new Date();
     const endDate = new Date();
@@ -44,6 +95,7 @@ export class WorkoutsService {
       startDate,
       endDate,
       exercises,
+      dailyWorkouts,
     });
     return this.workoutRepo.save(plan);
   }
@@ -66,7 +118,16 @@ export class WorkoutsService {
       trainingLocation: dto.trainingLocation ?? user.trainingLocation,
     };
 
-    const exercises = await this.aiService.generateWorkout(profile);
+    const feedbackLogs = await this.progressService.getRecentFeedback(userId, 14);
+    profile.recentFeedback = buildFeedbackSummary(feedbackLogs) || undefined;
+
+    const daily = await this.aiService.generateWorkoutByDays(profile);
+    const dailyWorkouts = daily.map((d) => ({
+      dayNumber: d.dayNumber,
+      weekday: toDayLabel(d.dayNumber, d.muscleGroup),
+      exercises: d.exercises,
+    }));
+    const exercises = daily.flatMap((d) => d.exercises);
 
     const startDate = new Date();
     const endDate = new Date();
@@ -78,6 +139,7 @@ export class WorkoutsService {
       startDate,
       endDate,
       exercises,
+      dailyWorkouts,
     });
     return this.workoutRepo.save(plan);
   }
